@@ -17,7 +17,7 @@ yaw = 0
 
 # LED configuration.
 LED_CHANNEL = 0
-LED_COUNT = 16         # How many LEDs to light.
+LED_COUNT = 256         # How many LEDs to light.
 # Frequency of the LED signal.  Should be 800khz or 400khz.
 LED_FREQ_HZ = 800000
 LED_DMA_NUM = 10         # DMA channel to use, can be 0-14.
@@ -63,8 +63,8 @@ def update_ws2812(myws, image):
         col = i % x
         col = col if row % 2 == 1 else x - 1 - col
         blue = image[row][col][0]
-        green = image[row][col][1]
-        red = image[row][col][2]
+        green = image[row][col][2]
+        red = image[row][col][1]
         blue = int(blue)
         green = int(green)
         red = int(red)
@@ -125,7 +125,7 @@ def isClicked():
 rate = 30  # 大约 30 fps
 lasttime = -1
 # f = open('log.txt', 'w')
-mode = int(1)
+mode = int(4)
 # 切换模式
 modecounter = 45
 roll = 0
