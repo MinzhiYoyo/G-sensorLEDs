@@ -1,4 +1,5 @@
 
+from os import write
 from typing import List
 import numpy as np
 import cv2
@@ -109,7 +110,7 @@ class Snake_Particle:
 	def draw(self, img):
 		for i in self.body:
 			img[int(i[1]), int(i[0])] = (255,0,0)
-		img[int(self.head[1]), int(self.head[0])] = (203,192,255)
+		img[int(self.head[1]), int(self.head[0])] = (255,0,255)
 		img[int(self.food[1]), int(self.food[0])] = (0,255,0)
 			
 
@@ -135,9 +136,9 @@ class Particle:
 		if color is None:
 			return Particle(self.p, self.v, self.color)
 		return Particle(self.p, self.v, color)
-	def update(self, p: np.ndarray, v: np.ndarray, dt, dv, kp = 0.5):  # kp 是速度衰减率
-		p = p + v * dt
-		v = v + dv * dt
+	def update(self, p: np.ndarray, v: np.ndarray, dt, dv, kp = 0.8):  # kp 是速度衰减率
+		# p = p + v * dt
+		# v = v + dv * dt
 		# while not self.inrange(p):
 		if (p[0] - 16) > 0:
 			p[0] = 16 - (p[0] - 16) * kp		# 判断位置是否符合要求
@@ -176,7 +177,7 @@ class God:
 		# print("particlist",self.particleList[0].v)
 	def add(self, p: np.ndarray, v: np.ndarray, color: tuple):
 		self.particleList.append(Particle(p, v, color))
-	def update(self, dt, da, dv, img, kp = 0.5):
+	def update(self, dt, da, dv, img, kp = 0.8):
 		for p in self.particleList:
 			# print("p", p.p + p.v * dt)
 			p.update(p.p + p.v * dt, p.v + da * dt, dt, dv, kp)
@@ -315,13 +316,13 @@ def flowShadow(roll, pitch, yaw, last_time, src: np.ndarray):
 	# 单位颜色
 	unitColor = (17,0,0)
 	if last_time < 0:  # 需要初始化
-		myParticle = init_particle(1, (unitColor[0] * num, unitColor[1] * num, unitColor[2] * num))
+		myParticle = init_particle(1, (unitColor[0] * num, unitColor[1] * num, 128))
 		for i in range(num):
 			flows.append(myParticle.p)
 		return time.time()
 
 	dt = time.time() - last_time
-	g = 6
+	g = 9.8
 	# 计算全部粒子的加速度
 	dax = g*math.sin(math.radians(roll))
 	day = g*math.sin(math.radians(pitch))
@@ -331,9 +332,12 @@ def flowShadow(roll, pitch, yaw, last_time, src: np.ndarray):
 		day = 0
 	da = np.array([dax, day])
 	dv = da * dt
-
+	# print('da:\t',da)
+	# print('dv:\t',dv)
+	# print('dt:\t',dt,'\n')
 	# 模拟粒子运动，更新位置
-	myParticle.update(myParticle.p + myParticle.v * dt, myParticle.v + da * dt, dt, dv)
+	# myParticle.update( myParticle.p + dv * dt, myParticle.v + da * dt, dt, dv)
+	myParticle.update( myParticle.p + myParticle.v * dt, myParticle.v + dv, dt, dv)
 	myParticle.draw(src)
 
 	# 更新流影
@@ -361,21 +365,24 @@ def flowShadow(roll, pitch, yaw, last_time, src: np.ndarray):
 		src[px_tmp, py_tmp] = tmp_color
 	return time.time()
 
-
+snakefile = open('debug.txt','w')
 # 新概念贪吃蛇模式
 snakehead = Particle(np.array([8, 8]), np.array([0, 0]), (255, 0, 0))
 food = np.array([np.random.randint(0, 16), np.random.randint(0, 16)])
 snake_flow = list()
+length = 5
 def newSnake(roll, pitch, yaw, last_time, src: np.ndarray):
 	global snakehead
 	global food
 	global snake_flow
+	global length
 	if last_time < 0:  # 需要初始化
-		snakehead = init_particle(1, (203, 192, 255))
+		length = 5
+		snakehead = init_particle(1, (255, 0, 255))
 		food = np.array([np.random.randint(0, 16), np.random.randint(0, 16)])
 		headaxis = np.array([int(snakehead.p[0]), int(snakehead.p[1])])
 		# 初始化流影5次
-		for i in range(5):
+		for i in range(40):
 			snake_flow.append(headaxis)
 		while (food == headaxis).all():
 			food = np.array([np.random.randint(0, 16), np.random.randint(0, 16)])
@@ -391,7 +398,8 @@ def newSnake(roll, pitch, yaw, last_time, src: np.ndarray):
 		day = 0
 	da = np.array([dax, day])
 	dv = da * dt
-	snakehead.update(snakehead.p + snakehead.v * dt, snakehead.v + da * dt, dt, dv)
+	# snakehead.update(snakehead.p + snakehead.v * dt, snakehead.v + da * dt, dt, dv)
+	snakehead.update(snakehead.p + snakehead.v * dt, da, dt, dv)
 	snakehead.draw(src)
 
 	# 画出食物位置
@@ -402,21 +410,28 @@ def newSnake(roll, pitch, yaw, last_time, src: np.ndarray):
 
 	# 判断是否吃到食物
 	if (headaxis == food).all():	# 吃到食物了
-		snake_flow.append(snake_flow[-1])
+		# snake_flow.append(snake_flow[-1])
+		# snake_flow.append(snake_flow[-1])
+		length += 2
 		# 更新食物
 		food = np.array([np.random.randint(0, 16), np.random.randint(0, 16)])
 		while (food == headaxis).all():
 			food = np.array([np.random.randint(0, 16), np.random.randint(0, 16)])
 	
 	# 将流影右移一位
-	length = len(snake_flow)
-	for i in range(length - 1, -1, -1):
+	size = len(snake_flow)
+	snakefile.write(str(snake_flow)+'\n')
+	for i in range(size - 1, -1, -1):
 		snake_flow[i] = snake_flow[i - 1]
 	snake_flow[0] = headaxis
 
+	if length > 40:
+		length = 5
 
+	# print('[Info]:\t',size)
 	# 画流影
-	for i in range(len(snake_flow)):
+	# snakefile.write('length:\t{:>4d}\t'.format(length))
+	for i in range(length):
 		(px_tmp, py_tmp) = (int(snake_flow[i][1]), int(snake_flow[i][0]))
 		# if (px_tmp, py_tmp) == (headaxis[1], headaxis[0]):
 		# 	continue
@@ -427,8 +442,10 @@ def newSnake(roll, pitch, yaw, last_time, src: np.ndarray):
 			if channel < 0:
 				channel = 0
 		src[px_tmp, py_tmp] = tmp_color
-	if len(snake_flow) > 25:
-		snake_flow = snake_flow[0:5]
+	# 	snakefile.write(str(tmp_color) + '\t')
+	# snakefile.write('\n')
+	# if len(snake_flow) > 40:
+	# 	snake_flow = snake_flow[0:5]
 	# 输出蛇头坐标，食物坐标
 	# info = '[flowsnake]\t' + 'head:' + str(headaxis) + '\tfood:' + str(food) + '\tlength:' + str(len(snake_flow))
 	# print(info)
@@ -443,7 +460,7 @@ def update_information(roll, pitch, yaw, last_time, src: np.ndarray, mode : int)
 		return mutilParticle(roll, pitch, yaw, last_time, src,(100,0,0))
 	elif mode == 2:	# 流影模式
 		return flowShadow(roll, pitch, yaw, last_time, src)
-	elif mode == 3:	# 烟花模式
+	elif mode == 3:	# 多粒子模式2
 		return mutilParticle2(roll, pitch, yaw, last_time, src)
 	elif mode == 4:	# 贪吃蛇模式
 		return snake(roll, pitch, yaw, last_time, src)
