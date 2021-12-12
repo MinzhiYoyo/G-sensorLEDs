@@ -22,9 +22,9 @@
 
 > 1、Raspberry Pi OS
 >
-> 2、mpu6050 库
+> 2、[mpu6050 库](https://github.com/m-rtijn/mpu6050)
 >
-> 3、ws2812 库
+> 3、[ws2812 库](https://github.com/jgarff/rpi_ws281x)的[python版本](https://github.com/rpi-ws281x/rpi-ws281x-python)
 >
 > 4、该项目的算法
 
