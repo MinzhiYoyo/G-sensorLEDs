@@ -12,6 +12,7 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setup(btnPIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 
+# mpu6050
 sensor = mpu6050.mpu6050(0x68)
 yaw = 0
 
